@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot mit OpenAI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #chatbox {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+        }
+        #userMessage {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        #sendMessage {
+            padding: 10px 20px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chatbot mit OpenAI</h1>
+    <div id="chatbox"></div>
+    <input type="text" id="userMessage" placeholder="Schreibe eine Nachricht..." />
+    <button id="sendMessage" onclick="sendMessage()">Absenden</button>
+
+    <h2>Antwort des Chatbots:</h2>
+    <p id="chatbotResponse"></p>
+
+    <script>
+        function sendMessage() {
+            const userMessage = document.getElementById("userMessage").value;
+
+            if (!userMessage.trim()) {
+                alert("Bitte gib eine Nachricht ein.");
+                return;
+            }
+
+            // API-Anfrage an OpenAI
+            fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                   
+                },
+                body: JSON.stringify({
+                    model: "gpt-3.5-turbo",
+                    messages: [
+                        { "role": "system", "content": "You are a helpful assistant." },
+                        { "role": "user", "content": userMessage }
+                    ]
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // Fehler bei der Anfrage
+                    return response.text().then(text => {
+                        throw new Error('Fehler bei der API-Anfrage: ' + text);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data); // Protokolliert die gesamte API-Antwort für die Fehlersuche
+
+                // Überprüfen, ob die Antwort das erwartete Format hat
+                if (data.choices && data.choices.length > 0) {
+                    const chatbotMessage = data.choices[0].message.content;
+                    document.getElementById("chatbotResponse").innerText = chatbotMessage;
+                } else {
+                    throw new Error('Keine Antwort von der API erhalten.');
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                document.getElementById("chatbotResponse").innerText = "Fehler: " + error.message;
+            });
+        }
+    </script>
+</body>
+</html>
